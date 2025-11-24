@@ -251,7 +251,9 @@ export function JobsList({
 
                 {/* Timestamp */}
                 <p className="ml-auto w-fit flex-shrink-0 text-xs text-foreground/80">
-                  detected {getRelativeTimeString(new Date(job.created_at))}
+                  {job.listedAt
+                    ? `listed ${getRelativeTimeString(new Date(job.listedAt))}`
+                    : `detected ${getRelativeTimeString(new Date(job.created_at))}`}
                 </p>
               </div>
 

@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@first
 import { toast } from '@first2apply/ui';
 
 import { DeleteJobDialog } from './deleteJobDialog';
+import { CalendarIcon } from 'lucide-react';
 
 function isJobLabel(value: JobLabel): value is JobLabel {
   return Object.values(JOB_LABELS).includes(value);
@@ -116,6 +117,12 @@ export function JobSummary({
           <div className="flex items-center gap-3 text-muted-foreground">
             <ListBulletIcon className="h-auto w-5" />
             <p>{job.tags?.slice(0, 5).join(', ')}</p>
+          </div>
+        )}
+        {job.listedAt && (
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <CalendarIcon className="h-auto w-5" />
+            listed {new Date(job.listedAt).toLocaleString()}
           </div>
         )}
       </div>
