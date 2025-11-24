@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
         description: updates.description ?? job.description,
         salary: !job.salary ? updates.salary : job.salary,
         tags: Array.from(new Set((job.tags ?? []).concat(updates.tags ?? []))),
+        listedAt: updates.listedAt ?? job.listedAt,
       };
       if (!updates.description && isLastRetry) {
         logger.error(
@@ -85,6 +86,7 @@ Deno.serve(async (req) => {
       if (updates.description) {
         logger.info(`[${site.provider}] finished parsing job description for ${job.title}`, {
           site: site.provider,
+          listedAt: updates.listedAt,
         });
       }
 
@@ -115,6 +117,7 @@ Deno.serve(async (req) => {
           salary: updatedJob.salary,
           tags: updatedJob.tags,
           status: updatedJob.status,
+          listedAt: updatedJob.listedAt,
           updated_at: new Date(),
           exclude_reason: updatedJob.exclude_reason,
         })

@@ -44,6 +44,7 @@ public.jobs (
   location text null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
+  "listedAt" timestamp with time zone null,
   salary text null,
   tags text[] not null default '{}'::text[],
   "jobType" text null,
@@ -216,7 +217,7 @@ begin
     and (array_length(jobs_link_ids, 1) is null or link_id = any(jobs_link_ids))
     and (array_length(jobs_labels, 1) is null or labels && jobs_labels)
     and (jobs_search is null or job_search_vector @@ plainto_tsquery('english', jobs_search))
-  order by updated_at desc, id desc
+  order by "listedAt" desc nulls last, updated_at desc, id desc
   limit jobs_page_size;
 end; $$
 language plpgsql;

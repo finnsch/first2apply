@@ -81,6 +81,7 @@ export type Job = {
   location?: string;
   salary?: string;
   tags?: string[];
+  listedAt?: Date;
 
   description?: string;
 
@@ -194,7 +195,7 @@ export type DbSchema = {
           | 'status'
           | 'link_id'
         >;
-        Update: Pick<Job, 'status'> | Pick<Job, 'description'> | Pick<Job, 'labels'>;
+        Update: Pick<Job, 'status'> | Pick<Job, 'description'> | Pick<Job, 'labels'> | Pick<Job, 'listedAt'>;
         Relationships: [];
       };
       reviews: {

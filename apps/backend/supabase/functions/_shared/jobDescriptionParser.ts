@@ -15,6 +15,7 @@ const SITE_PROVIDER_QUERY_SELECTORS: Record<SiteProvider, SiteProviderQuerySelec
     description: [
       '.description__text .show-more-less-html__markup',
       '.jobs-box__html-content > .job-details-module__content',
+      '.jobs-description__container .jobs-box__html-content .mt4',
       '.jobs-description__container .jobs-box__html-content',
       '.job-details-module.artdeco-card',
     ],
@@ -75,7 +76,7 @@ const SITE_PROVIDER_QUERY_SELECTORS: Record<SiteProvider, SiteProviderQuerySelec
   },
 };
 
-export type JobDescriptionUpdates = Partial<Pick<Job, 'description' | 'salary' | 'tags'>>;
+export type JobDescriptionUpdates = Partial<Pick<Job, 'description' | 'salary' | 'tags' | 'listedAt'>>;
 
 const turndownService = new turndown({
   bulletListMarker: '-',
@@ -184,8 +185,18 @@ function parseLinkedinJobDescription({ html }: { html: string }): JobDescription
     description = turndownService.turndown(sanitizedHtml);
   }
 
+  let listedAt: Date | undefined;
+  const listedAtMatch = html.match(/"originalListedAt":(\d+),/);
+  if (listedAtMatch) {
+    const timestamp = parseInt(listedAtMatch[1], 10);
+    if (!isNaN(timestamp)) {
+      listedAt = new Date(timestamp);
+    }
+  }
+
   return {
     description,
+    listedAt,
   };
 }
 
