@@ -1,5 +1,9 @@
 export const AVAILABLE_CRON_RULES = [
   {
+    name: 'Every 15 minutes',
+    value: '*/15 * * * *',
+  },
+  {
     name: 'Every 30 minutes',
     value: '*/30 * * * *',
   },
