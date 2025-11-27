@@ -223,6 +223,8 @@ async function parseSiteJobsList({
       return parseUSAJobsJobs({ siteId: site.id, html });
     case SiteProvider.talent:
       return parseTalentJobs({ siteId: site.id, html });
+    case SiteProvider.stepstone:
+      return parseStepstoneJobs({ siteId: site.id, html });
     case SiteProvider.custom:
       return parseCustomJobs({ siteId: site.id, html, url, ...context });
   }
@@ -1493,6 +1495,67 @@ export function parseTalentJobs({ siteId, html }: { siteId: number; html: string
       companyLogo,
       location,
       jobType,
+      labels: [],
+    };
+  });
+
+  const validJobs = jobs.filter((job): job is ParsedJob => !!job);
+  return {
+    jobs: validJobs,
+    listFound: true,
+    elementsCount: jobElements.length,
+  };
+}
+
+/**
+ * Method used to parse a stepstone job page.
+ */
+export function parseStepstoneJobs({ siteId, html }: { siteId: number; html: string }): JobSiteParseResult {
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  if (!document) throw new Error('Could not parse html');
+
+  const jobsList = document.querySelector('div[data-genesis-element="CARD_GROUP_CONTAINER"]');
+  if (!jobsList) {
+    return {
+      jobs: [],
+      listFound: false,
+      elementsCount: 0,
+    };
+  }
+
+  const jobElements = Array.from(jobsList.querySelectorAll('article')) as Element[];
+
+  const jobs = jobElements.map((el): ParsedJob | null => {
+    const idAttr = el.getAttribute('id');
+    if (!idAttr) return null;
+    const externalId = idAttr.split('-').pop()?.trim();
+    if (!externalId) return null;
+
+    const urlEl = el.querySelector('a[data-at="job-item-title"]');
+    const externalUrlPath = urlEl?.getAttribute('href')?.trim();
+    if (!externalUrlPath) return null;
+    const externalUrl = `https://www.stepstone.de${externalUrlPath}`;
+
+    const title = urlEl?.textContent?.trim();
+    if (!title) return null;
+
+    const companyImg = el.querySelector('img[data-genesis-element="COMPANY_LOGO_IMAGE"]');
+    const companyName = companyImg?.getAttribute('alt')?.trim();
+    if (!companyName) return null;
+
+    const companyLogo = companyImg?.getAttribute('src')?.trim() || undefined;
+
+    const locationContainer = el.querySelector('span[data-at="job-item-location"]');
+    const location = locationContainer?.querySelector('span[data-genesis-element="TEXT"]')?.textContent?.trim();
+
+    return {
+      siteId,
+      externalId,
+      externalUrl,
+      title,
+      companyName,
+      companyLogo,
+      location,
       labels: [],
     };
   });

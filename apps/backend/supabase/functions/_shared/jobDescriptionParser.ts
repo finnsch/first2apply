@@ -71,6 +71,9 @@ const SITE_PROVIDER_QUERY_SELECTORS: Record<SiteProvider, SiteProviderQuerySelec
   [SiteProvider.talent]: {
     description: ['.sc-e78c1cd5-10.sc-e78c1cd5-11.sc-207c7d5e-10.dwTTNY.gdYndp.jkXeTb > p'],
   },
+  [SiteProvider.stepstone]: {
+    description: ['[data-at="job-ad-content"]'],
+  },
   [SiteProvider.custom]: {
     description: ['#job-description'],
   },
@@ -137,6 +140,8 @@ export async function parseJobDescriptionUpdates({
       return parseUSAJobsJobDescription({ html });
     case SiteProvider.talent:
       return parseTalentJobDescription({ html });
+    case SiteProvider.stepstone:
+      return parseStepstoneJobDescription({ html });
     case SiteProvider.custom:
       return await parseCustomJobDescription({ html, user, job, ...context });
   }
@@ -345,6 +350,37 @@ function parseGlassdoorJobDescription({ html }: { html: string }): JobDescriptio
 
   return {
     description,
+  };
+}
+
+/**
+ * Parse a stepstone job description from the HTML.
+ */
+function parseStepstoneJobDescription({ html }: { html: string }): JobDescriptionUpdates {
+  const { descriptionContainer } = extractCommonDomElements({
+    provider: SiteProvider.stepstone,
+    html,
+  });
+
+  let description: string | undefined;
+  if (descriptionContainer) {
+    const styleTags = descriptionContainer.querySelectorAll('style');
+    styleTags.forEach((tag) => (tag as Element).remove());
+    description = turndownService.turndown(descriptionContainer.innerHTML);
+  }
+
+  let listedAt: Date | undefined;
+  const listedAtMatch = html.match(/"datePosted":\s*"([^"]+)"/);
+  if (listedAtMatch) {
+    const timestamp = Date.parse(listedAtMatch[1]);
+    if (!isNaN(timestamp)) {
+      listedAt = new Date(timestamp);
+    }
+  }
+
+  return {
+    description,
+    listedAt,
   };
 }
 
