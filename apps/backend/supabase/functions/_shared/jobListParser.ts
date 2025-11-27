@@ -225,6 +225,8 @@ async function parseSiteJobsList({
       return parseTalentJobs({ siteId: site.id, html });
     case SiteProvider.stepstone:
       return parseStepstoneJobs({ siteId: site.id, html });
+    case SiteProvider.hiringCafe:
+      return parseHiringCafeJobs({ siteId: site.id, html });
     case SiteProvider.custom:
       return parseCustomJobs({ siteId: site.id, html, url, ...context });
   }
@@ -1556,6 +1558,105 @@ export function parseStepstoneJobs({ siteId, html }: { siteId: number; html: str
       companyName,
       companyLogo,
       location,
+      labels: [],
+    };
+  });
+
+  const validJobs = jobs.filter((job): job is ParsedJob => !!job);
+  return {
+    jobs: validJobs,
+    listFound: true,
+    elementsCount: jobElements.length,
+  };
+}
+
+/**
+ * Method used to parse a HiringCafe job page.
+ */
+export function parseHiringCafeJobs({ siteId, html }: { siteId: number; html: string }): JobSiteParseResult {
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  if (!document) throw new Error('Could not parse html');
+
+  const jobsList = document.querySelector('.infinite-scroll-component .grid');
+  if (!jobsList) {
+    return {
+      jobs: [],
+      listFound: false,
+      elementsCount: 0,
+    };
+  }
+
+  const jobElements = Array.from(jobsList.querySelectorAll(':scope > div.relative')) as Element[];
+
+  const jobs = jobElements.map((el): ParsedJob | null => {
+    // Find the job posting link to extract external ID and URL
+    const jobPostingLink = el.querySelector('a[href*="/viewjob/"]');
+    if (!jobPostingLink) return null;
+
+    const externalUrlPath = jobPostingLink.getAttribute('href')?.trim();
+    if (!externalUrlPath) return null;
+
+    // Extract external ID from the URL path (e.g., "/viewjob/omf10hacxi7c8vcp" -> "omf10hacxi7c8vcp")
+    const externalId = externalUrlPath.split('/').pop()?.trim();
+    if (!externalId) return null;
+
+    const externalUrl = externalUrlPath.startsWith('http') ? externalUrlPath : `https://hiring.cafe${externalUrlPath}`;
+
+    const titleEl = el.querySelector('span.font-bold.text-start.line-clamp-2');
+    const title = titleEl?.textContent?.trim();
+    if (!title) return null;
+
+    const companyDescEl = el.querySelector('span.line-clamp-3.font-light');
+    let companyName: string | undefined;
+    const companyBoldEl = companyDescEl?.querySelector('span.font-bold');
+    if (companyBoldEl) {
+      // Remove trailing colon and whitespace
+      companyName = companyBoldEl.textContent?.trim().replace(/:$/, '').trim();
+    }
+    if (!companyName) return null;
+
+    const companyLogoImg = el.querySelector('picture img');
+    const companyLogo = companyLogoImg?.getAttribute('src')?.trim() || undefined;
+
+    const locationContainer = el.querySelector('div.mt-1.flex.items-center.space-x-1.rounded.text-xs');
+    const location = locationContainer?.querySelector('span.line-clamp-2')?.textContent?.trim();
+
+    // Parse job type tags (Remote, Hybrid, Onsite, Full Time, etc.)
+    const tagElements = Array.from(
+      el.querySelectorAll('div.flex.flex-wrap.gap-1\\.5 > span.border.rounded.text-xs'),
+    ) as Element[];
+    const tags = tagElements.map((tag) => tag.textContent?.trim() || '').filter(Boolean);
+
+    // Determine job type from tags
+    let jobType: JobType = 'onsite';
+    const tagsLower = tags.map((t) => t.toLowerCase());
+    if (tagsLower.some((t) => t === 'remote')) jobType = 'remote';
+    else if (tagsLower.some((t) => t === 'hybrid')) jobType = 'hybrid';
+
+    // Parse salary - look for tags with salary format (e.g., "$146k-$162k/yr")
+    const salaryTag = tags.find((t) => t.includes('$') || t.includes('€') || t.includes('£'));
+    const salary = parseSalary({ salary: salaryTag });
+
+    // Filter out salary and job type from tags to keep only other tags
+    const filteredTags = tags.filter(
+      (t) =>
+        !t.includes('$') &&
+        !t.includes('€') &&
+        !t.includes('£') &&
+        !['remote', 'hybrid', 'onsite', 'full time', 'part time', 'contract'].includes(t.toLowerCase()),
+    );
+
+    return {
+      siteId,
+      externalId,
+      externalUrl,
+      title,
+      companyName,
+      companyLogo,
+      jobType,
+      location,
+      salary,
+      tags: filteredTags.length > 0 ? filteredTags : undefined,
       labels: [],
     };
   });

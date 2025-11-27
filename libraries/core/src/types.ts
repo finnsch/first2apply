@@ -17,6 +17,7 @@ export enum SiteProvider {
   usaJobs = 'usaJobs',
   talent = 'talent',
   stepstone = 'stepstone',
+  hiringCafe = 'hiringCafe',
 
   // generic provider for sites not in the list above
   custom = 'custom',

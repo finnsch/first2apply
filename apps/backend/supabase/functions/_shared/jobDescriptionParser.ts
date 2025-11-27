@@ -74,6 +74,9 @@ const SITE_PROVIDER_QUERY_SELECTORS: Record<SiteProvider, SiteProviderQuerySelec
   [SiteProvider.stepstone]: {
     description: ['[data-at="job-ad-content"]'],
   },
+  [SiteProvider.hiringCafe]: {
+    description: [],
+  },
   [SiteProvider.custom]: {
     description: ['#job-description'],
   },
@@ -142,6 +145,8 @@ export async function parseJobDescriptionUpdates({
       return parseTalentJobDescription({ html });
     case SiteProvider.stepstone:
       return parseStepstoneJobDescription({ html });
+    case SiteProvider.hiringCafe:
+      return parseHiringCafeJobDescription({ html });
     case SiteProvider.custom:
       return await parseCustomJobDescription({ html, user, job, ...context });
   }
@@ -375,6 +380,45 @@ function parseStepstoneJobDescription({ html }: { html: string }): JobDescriptio
     const timestamp = Date.parse(listedAtMatch[1]);
     if (!isNaN(timestamp)) {
       listedAt = new Date(timestamp);
+    }
+  }
+
+  return {
+    description,
+    listedAt,
+  };
+}
+
+/**
+ * Parse a HiringCafe job description from the HTML.
+ * HiringCafe embeds job data in a JSON-LD script tag.
+ */
+export function parseHiringCafeJobDescription({ html }: { html: string }): JobDescriptionUpdates {
+  let description: string | undefined;
+  let listedAt: Date | undefined;
+
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  if (!doc) {
+    return { description, listedAt };
+  }
+
+  const jsonLdScript = doc.querySelector('script[type="application/ld+json"]');
+  if (jsonLdScript?.textContent) {
+    try {
+      const jsonLd = JSON.parse(jsonLdScript.textContent);
+
+      if (jsonLd.description) {
+        description = turndownService.turndown(jsonLd.description);
+      }
+
+      if (jsonLd.datePosted) {
+        const timestamp = Date.parse(jsonLd.datePosted);
+        if (!isNaN(timestamp)) {
+          listedAt = new Date(timestamp);
+        }
+      }
+    } catch {
+      // JSON parsing failed
     }
   }
 
