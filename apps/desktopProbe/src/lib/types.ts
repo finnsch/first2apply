@@ -48,6 +48,8 @@ export type JobScannerSettings = {
   useSound: boolean;
   areEmailAlertsEnabled: boolean;
   inAppBrowserEnabled: boolean;
+  arePushAlertsEnabled: boolean;
+  pushTopic?: string;
 };
 
 export type NewAppVersion = {

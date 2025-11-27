@@ -6,8 +6,7 @@ import { useSession } from '@/hooks/session';
 import { useSettings } from '@/hooks/settings';
 import { applyAppUpdate, logout, openExternalUrl } from '@/lib/electronMainSdk';
 import { JobScannerSettings } from '@/lib/types';
-import { Button } from '@first2apply/ui';
-import { Switch } from '@first2apply/ui';
+import { Button, Input, Switch } from '@first2apply/ui';
 import * as luxon from 'luxon';
 
 import { DefaultLayout } from './defaultLayout';
@@ -124,6 +123,39 @@ export function SettingsPage() {
           checked={settings.areEmailAlertsEnabled}
           onCheckedChange={(checked) => onUpdatedSettings({ ...settings, areEmailAlertsEnabled: checked })}
         />
+      </div>
+
+      {/* ntfy push notifications */}
+      <div className="flex flex-col gap-4 rounded-lg border p-6">
+        <div className="flex flex-row items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h2 className="text-lg">Push notifications (ntfy.sh)</h2>
+            <p className="text-sm font-light">
+              Receive push notifications on your phone via the free{' '}
+              <span
+                className="cursor-pointer underline"
+                onClick={() => openExternalUrl('https://ntfy.sh')}
+              >
+                ntfy.sh
+              </span>{' '}
+              service
+            </p>
+          </div>
+          <Switch
+            checked={settings.arePushAlertsEnabled}
+            onCheckedChange={(checked) => onUpdatedSettings({ ...settings, arePushAlertsEnabled: checked })}
+          />
+        </div>
+        {settings.arePushAlertsEnabled && (
+          <div className="flex flex-row items-center gap-4">
+            <Input
+              placeholder="Enter your ntfy topic (e.g., my-job-alerts)"
+              value={settings.pushTopic ?? ''}
+              onChange={(e) => onUpdatedSettings({ ...settings, pushTopic: e.target.value || undefined })}
+              className="flex-1"
+            />
+          </div>
+        )}
       </div>
 
       {/* in-app browser settings */}

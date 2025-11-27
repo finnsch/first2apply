@@ -163,12 +163,24 @@ export class F2aSupabaseApi {
   /**
    * Run the post scan hook edge function.
    */
-  runPostScanHook({ newJobIds, areEmailAlertsEnabled }: { newJobIds: number[]; areEmailAlertsEnabled: boolean }) {
+  runPostScanHook({
+    newJobIds,
+    areEmailAlertsEnabled,
+    arePushAlertsEnabled,
+    pushTopic,
+  }: {
+    newJobIds: number[];
+    areEmailAlertsEnabled: boolean;
+    arePushAlertsEnabled: boolean;
+    pushTopic?: string;
+  }) {
     return this._supabaseApiCall(() =>
       this._supabase.functions.invoke('post-scan-hook', {
         body: {
           newJobIds,
           areEmailAlertsEnabled,
+          arePushAlertsEnabled,
+          pushTopic,
         },
       }),
     );

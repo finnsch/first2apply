@@ -21,6 +21,8 @@ const DEFAULT_SETTINGS: JobScannerSettings = {
   useSound: true,
   areEmailAlertsEnabled: true,
   inAppBrowserEnabled: true,
+  arePushAlertsEnabled: false,
+  pushTopic: undefined,
 };
 
 /**
@@ -41,6 +43,8 @@ export class JobScanner {
     useSound: false,
     areEmailAlertsEnabled: true,
     inAppBrowserEnabled: true,
+    arePushAlertsEnabled: false,
+    pushTopic: undefined,
   };
   private _cronJob: ScheduledTask | undefined;
   private _prowerSaveBlockerId: number | undefined;
@@ -199,6 +203,8 @@ export class JobScanner {
         .runPostScanHook({
           newJobIds: sendNotification ? newJobIds : [], // hacky way to supress email alerts
           areEmailAlertsEnabled: this._settings.areEmailAlertsEnabled,
+          arePushAlertsEnabled: this._settings.arePushAlertsEnabled,
+          pushTopic: this._settings.pushTopic,
         })
         .catch((error) => {
           this._logger.error(`failed to run post scan hook: ${getExceptionMessage(error)}`);

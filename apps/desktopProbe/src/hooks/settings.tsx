@@ -37,6 +37,8 @@ export const SettingsProvider = ({ children }: React.PropsWithChildren<unknown>)
     preventSleep: false,
     areEmailAlertsEnabled: true,
     inAppBrowserEnabled: true,
+    arePushAlertsEnabled: false,
+    pushTopic: undefined,
   });
 
   // Load settings on component mount

@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
     const body: {
       newJobIds: number[];
       areEmailAlertsEnabled: boolean;
+      arePushAlertsEnabled: boolean;
+      pushTopic?: string;
     } = await req.json();
 
     const mailer = new MailersendMailer(
@@ -42,7 +44,7 @@ Deno.serve(async (req) => {
     logger.info(`running post scan hook ${JSON.stringify(body)}  ...`);
 
     // check for broken links and send out emails
-    const { areEmailAlertsEnabled, newJobIds } = body;
+    const { areEmailAlertsEnabled, arePushAlertsEnabled, pushTopic, newJobIds } = body;
     await checkBrokenLinks({ context, mailer });
 
     // send out email for new job links
@@ -51,6 +53,14 @@ Deno.serve(async (req) => {
       areEmailAlertsEnabled,
       context,
       mailer,
+    });
+
+    // send out push notification for new job links
+    await sendNewJobLinksPushNotification({
+      newJobIds,
+      arePushAlertsEnabled,
+      pushTopic,
+      context,
     });
 
     logger.info('finished running post scan hook');
@@ -186,4 +196,76 @@ async function sendNewJobLinksEmail({
   });
 
   logger.info(`finished sending email for new job links`);
+}
+
+/**
+ * Method used to send a push notification via ntfy.sh with new job links to the user.
+ */
+export async function sendNewJobLinksPushNotification({
+  newJobIds,
+  arePushAlertsEnabled,
+  pushTopic,
+  context,
+}: {
+  newJobIds: number[];
+  arePushAlertsEnabled: boolean;
+  pushTopic?: string;
+  context: EdgeFunctionAuthorizedContext;
+}) {
+  const { logger, supabaseClient } = context;
+  logger.info(`sending push notification for new job links ...`);
+
+  if (!arePushAlertsEnabled) {
+    logger.info(`push alerts are disabled`);
+    return;
+  }
+
+  if (!pushTopic) {
+    logger.info(`push topic not set`);
+    return;
+  }
+
+  if (newJobIds.length === 0) {
+    logger.info(`no new jobs to send push notification for`);
+    return;
+  }
+
+  // load the new job list
+  const { data: newJobs, error: newJobsError } = await supabaseClient.from('jobs').select('*').in('id', newJobIds);
+  if (newJobsError) {
+    logger.error(`failed to load new jobs for push notification: ${getExceptionMessage(newJobsError)}`);
+    return;
+  }
+
+  // build the notification message
+  const jobCount = newJobs.length;
+  const companies = [...new Set(newJobs.map((job) => job.companyName).filter(Boolean))];
+  const companiesPreview = companies.slice(0, 5).join(', ');
+  const moreCompanies = companies.length > 5 ? ` and ${companies.length - 5} more` : '';
+
+  const title = `${jobCount} new job${jobCount > 1 ? 's' : ''} found!`;
+  const body =
+    companies.length > 0 ? `Companies: ${companiesPreview}${moreCompanies}` : 'Check your job listings for details.';
+
+  // send the push notification via ntfy.sh
+  try {
+    const response = await fetch(`https://ntfy.sh/${pushTopic}`, {
+      method: 'POST',
+      headers: {
+        Title: title,
+        Priority: 'high',
+        Tags: 'briefcase',
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      logger.error(`failed to send push notification: ${response.status} ${response.statusText}`);
+      return;
+    }
+
+    logger.info(`finished sending push notification`);
+  } catch (error) {
+    logger.error(`failed to send push notification: ${getExceptionMessage(error)}`);
+  }
 }
