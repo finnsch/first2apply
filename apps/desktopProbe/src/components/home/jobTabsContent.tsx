@@ -14,7 +14,7 @@ import {
   updateJobLabels,
   updateJobStatus,
 } from '@/lib/electronMainSdk';
-import { Job, JobLabel, JobStatus } from '@first2apply/core';
+import { Job, JobLabel, JobSortOption, JobStatus } from '@first2apply/core';
 import { TabsContent } from '@first2apply/ui';
 import { toast } from '@first2apply/ui';
 
@@ -42,6 +42,7 @@ export function JobTabsContent({
   siteIds,
   linkIds,
   labels,
+  sortBy,
 }: {
   status: JobStatus;
   listing: JobListing;
@@ -50,6 +51,7 @@ export function JobTabsContent({
   siteIds: number[];
   linkIds: number[];
   labels: string[];
+  sortBy: JobSortOption;
 }) {
   const { handleError } = useError();
   const { settings } = useSettings();
@@ -90,7 +92,7 @@ export function JobTabsContent({
         console.log(location.search);
         setListing((listing) => ({ ...listing, isLoading: true }));
 
-        const result = await listJobs({ status, search, siteIds, linkIds, labels, limit: JOB_BATCH_SIZE });
+        const result = await listJobs({ status, search, siteIds, linkIds, labels, sortBy, limit: JOB_BATCH_SIZE });
         console.log('found jobs', result.jobs.length);
 
         setListing({
@@ -131,6 +133,7 @@ export function JobTabsContent({
             siteIds,
             labels,
             linkIds,
+            sortBy,
           });
           setListing((l) => ({
             ...result,
@@ -228,6 +231,7 @@ export function JobTabsContent({
         siteIds,
         labels,
         linkIds,
+        sortBy,
       });
 
       setListing((listing) => ({
@@ -308,9 +312,9 @@ export function JobTabsContent({
   }, [selectedJobId]);
 
   // Update the query params when the search input changes
-  const onSearchJobs = ({ search, filters }: { search: string; filters: JobFiltersType }) => {
+  const onSearchJobs = ({ search, filters, sortBy: newSortBy }: { search: string; filters: JobFiltersType; sortBy: JobSortOption }) => {
     navigate(
-      `?status=${status}&search=${search}&site_ids=${filters.sites.join(',')}&link_ids=${filters.links.join(',')}&labels=${filters.labels.join(',')}`,
+      `?status=${status}&search=${search}&site_ids=${filters.sites.join(',')}&link_ids=${filters.links.join(',')}&labels=${filters.labels.join(',')}&sort_by=${newSortBy}`,
     );
   };
 
@@ -331,6 +335,7 @@ export function JobTabsContent({
                     siteIds={siteIds}
                     linkIds={linkIds}
                     labels={labels}
+                    sortBy={sortBy}
                     onSearchJobs={onSearchJobs}
                   />
                 </div>

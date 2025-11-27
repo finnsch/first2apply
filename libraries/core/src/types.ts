@@ -66,6 +66,17 @@ export type Link = {
 
 export type JobType = 'remote' | 'hybrid' | 'onsite';
 export type JobStatus = 'new' | 'applied' | 'archived' | 'deleted' | 'processing' | 'excluded_by_advanced_matching';
+
+export const JOB_SORT_OPTIONS = {
+  LISTED_AT_DESC: 'listedAt_desc',
+  LISTED_AT_ASC: 'listedAt_asc',
+  UPDATED_AT_DESC: 'updatedAt_desc',
+  UPDATED_AT_ASC: 'updatedAt_asc',
+} as const;
+
+export type JobSortOption = (typeof JOB_SORT_OPTIONS)[keyof typeof JOB_SORT_OPTIONS];
+
+export const DEFAULT_JOB_SORT: JobSortOption = JOB_SORT_OPTIONS.LISTED_AT_DESC;
 export type Job = {
   id: number;
   user_id: string;
@@ -244,6 +255,7 @@ export type DbSchema = {
           jobs_search?: string;
           jobs_site_ids?: number[];
           jobs_link_ids?: number[];
+          jobs_sort_by?: JobSortOption;
         };
         Args: {};
         Returns: Job[];

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { debounce } from 'lodash';
 
+import { DEFAULT_JOB_SORT, JobSortOption } from '@first2apply/core';
+
 import { JobFiltersMenu, JobFiltersType } from './jobFilters/jobFiltersMenu';
 import { SearchBox } from './jobFilters/searchBox';
 
@@ -13,25 +15,28 @@ export function JobFilters({
   siteIds,
   linkIds,
   labels,
+  sortBy,
   onSearchJobs,
 }: {
   search: string;
   siteIds: number[];
   linkIds: number[];
   labels: string[];
-  onSearchJobs: (_: { search: string; filters: JobFiltersType }) => void;
+  sortBy: JobSortOption;
+  onSearchJobs: (_: { search: string; filters: JobFiltersType; sortBy: JobSortOption }) => void;
 }) {
   const [inputValue, setInputValue] = useState(search);
   const [filters, setFilters] = useState<JobFiltersType>({
     sites: [],
     links: [],
     labels: [],
+    sortBy: sortBy || DEFAULT_JOB_SORT,
   });
 
   // Debounced search for input value
   const emitDebouncedSearch = useCallback(
     debounce((value: string, currentFilters: JobFiltersType) => {
-      onSearchJobs({ search: value, filters: currentFilters });
+      onSearchJobs({ search: value, filters: currentFilters, sortBy: currentFilters.sortBy });
     }, 350),
     [filters],
   );
@@ -43,7 +48,7 @@ export function JobFilters({
 
   // Emit filter changes immediately without debounce
   useDidMountEffect(() => {
-    onSearchJobs({ search: inputValue, filters: filters });
+    onSearchJobs({ search: inputValue, filters: filters, sortBy: filters.sortBy });
   }, [filters]);
 
   return (
@@ -54,6 +59,7 @@ export function JobFilters({
         selectedSites={siteIds || []}
         selectedLinks={linkIds || []}
         selectedLabels={labels || []}
+        selectedSortBy={sortBy || DEFAULT_JOB_SORT}
         onApplyFilters={(newFilters) => {
           setFilters(newFilters);
         }}

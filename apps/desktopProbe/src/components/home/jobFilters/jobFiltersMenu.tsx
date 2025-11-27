@@ -1,10 +1,10 @@
-import { FilterIcon } from 'lucide-react';
+import { Calendar, Clock, FilterIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { useLinks } from '@/hooks/links';
 import { useSites } from '@/hooks/sites';
 import { LABEL_COLOR_CLASSES } from '@/lib/labels';
-import { JOB_LABELS } from '@first2apply/core';
+import { DEFAULT_JOB_SORT, JOB_LABELS, JOB_SORT_OPTIONS, JobSortOption } from '@first2apply/core';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -23,7 +23,15 @@ export type JobFiltersType = {
   sites: number[];
   links: number[];
   labels: string[];
+  sortBy: JobSortOption;
 };
+
+const SORT_OPTIONS_DISPLAY: { value: JobSortOption; label: string; icon: React.ReactNode }[] = [
+  { value: JOB_SORT_OPTIONS.LISTED_AT_DESC, label: 'Date Posted (Newest)', icon: <Calendar className="mr-2 h-4 w-4" /> },
+  { value: JOB_SORT_OPTIONS.LISTED_AT_ASC, label: 'Date Posted (Oldest)', icon: <Calendar className="mr-2 h-4 w-4" /> },
+  { value: JOB_SORT_OPTIONS.UPDATED_AT_DESC, label: 'Recently Updated', icon: <Clock className="mr-2 h-4 w-4" /> },
+  { value: JOB_SORT_OPTIONS.UPDATED_AT_ASC, label: 'Least Recently Updated', icon: <Clock className="mr-2 h-4 w-4" /> },
+];
 
 const ALL_LABELS = Object.values(JOB_LABELS);
 
@@ -34,11 +42,13 @@ export function JobFiltersMenu({
   selectedSites,
   selectedLinks,
   selectedLabels,
+  selectedSortBy,
   onApplyFilters,
 }: {
   selectedSites: number[];
   selectedLinks: number[];
   selectedLabels: string[];
+  selectedSortBy: JobSortOption;
   onApplyFilters: (filters: JobFiltersType) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,9 +67,10 @@ export function JobFiltersMenu({
         sites: selectedSites.filter((id) => id !== siteId),
         links: selectedLinks,
         labels: selectedLabels,
+        sortBy: selectedSortBy,
       });
     } else {
-      onApplyFilters({ sites: [...selectedSites, siteId], links: selectedLinks, labels: selectedLabels });
+      onApplyFilters({ sites: [...selectedSites, siteId], links: selectedLinks, labels: selectedLabels, sortBy: selectedSortBy });
     }
   };
 
@@ -69,9 +80,10 @@ export function JobFiltersMenu({
         sites: selectedSites,
         links: selectedLinks.filter((id) => id !== linkId),
         labels: selectedLabels,
+        sortBy: selectedSortBy,
       });
     } else {
-      onApplyFilters({ sites: selectedSites, links: [...selectedLinks, linkId], labels: selectedLabels });
+      onApplyFilters({ sites: selectedSites, links: [...selectedLinks, linkId], labels: selectedLabels, sortBy: selectedSortBy });
     }
   };
 
@@ -81,23 +93,28 @@ export function JobFiltersMenu({
         sites: selectedSites,
         links: selectedLinks,
         labels: selectedLabels.filter((l) => l !== label),
+        sortBy: selectedSortBy,
       });
     } else {
-      onApplyFilters({ sites: selectedSites, links: selectedLinks, labels: [...selectedLabels, label] });
+      onApplyFilters({ sites: selectedSites, links: selectedLinks, labels: [...selectedLabels, label], sortBy: selectedSortBy });
     }
   };
 
+  const onSelectSortBy = (sortBy: JobSortOption) => {
+    onApplyFilters({ sites: selectedSites, links: selectedLinks, labels: selectedLabels, sortBy });
+  };
+
   const clearSites = () => {
-    onApplyFilters({ sites: [], links: selectedLinks, labels: selectedLabels });
+    onApplyFilters({ sites: [], links: selectedLinks, labels: selectedLabels, sortBy: selectedSortBy });
   };
   const clearLinks = () => {
-    onApplyFilters({ sites: selectedSites, links: [], labels: selectedLabels });
+    onApplyFilters({ sites: selectedSites, links: [], labels: selectedLabels, sortBy: selectedSortBy });
   };
   const clearLabels = () => {
-    onApplyFilters({ sites: selectedSites, links: selectedLinks, labels: [] });
+    onApplyFilters({ sites: selectedSites, links: selectedLinks, labels: [], sortBy: selectedSortBy });
   };
   const clearAll = () => {
-    onApplyFilters({ sites: [], links: [], labels: [] });
+    onApplyFilters({ sites: [], links: [], labels: [], sortBy: DEFAULT_JOB_SORT });
   };
 
   const activeFilterCount = selectedSites.length + selectedLinks.length + selectedLabels.length;
@@ -233,6 +250,33 @@ export function JobFiltersMenu({
                 >
                   Reset Labels
                 </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator />
+
+        {/* Sort By */}
+        <DropdownMenuGroup>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Sort By</DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent sideOffset={8} alignOffset={-37}>
+                {SORT_OPTIONS_DISPLAY.map((option) => (
+                  <DropdownMenuCheckboxItem
+                    key={option.value}
+                    checked={selectedSortBy === option.value}
+                    onSelect={(evt) => {
+                      evt.preventDefault();
+                      onSelectSortBy(option.value);
+                    }}
+                    className="pr-8"
+                  >
+                    {option.icon}
+                    <p>{option.label}</p>
+                  </DropdownMenuCheckboxItem>
+                ))}
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>

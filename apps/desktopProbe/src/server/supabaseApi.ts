@@ -1,4 +1,13 @@
-import { AdvancedMatchingConfig, DbSchema, Job, JobLabel, JobStatus, Link } from '@first2apply/core';
+import {
+  AdvancedMatchingConfig,
+  DEFAULT_JOB_SORT,
+  DbSchema,
+  Job,
+  JobLabel,
+  JobSortOption,
+  JobStatus,
+  Link,
+} from '@first2apply/core';
 import { FunctionsHttpError, PostgrestError, SupabaseClient, User } from '@supabase/supabase-js';
 import { backOff } from 'exponential-backoff';
 import * as luxon from 'luxon';
@@ -174,6 +183,7 @@ export class F2aSupabaseApi {
     siteIds,
     linkIds,
     labels,
+    sortBy = DEFAULT_JOB_SORT,
     limit = 50,
     after,
   }: {
@@ -182,6 +192,7 @@ export class F2aSupabaseApi {
     siteIds?: number[];
     linkIds?: number[];
     labels?: string[];
+    sortBy?: JobSortOption;
     limit?: number;
     after?: string;
   }) {
@@ -199,6 +210,7 @@ export class F2aSupabaseApi {
           jobs_site_ids,
           jobs_link_ids,
           jobs_labels,
+          jobs_sort_by: sortBy,
         });
 
         return res;

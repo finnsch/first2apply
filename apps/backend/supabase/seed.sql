@@ -196,7 +196,8 @@ create or replace function list_jobs(
     jobs_search text default null,
     jobs_site_ids integer[] default null,
     jobs_link_ids integer[] default null,
-    jobs_labels text[] default null
+    jobs_labels text[] default null,
+    jobs_sort_by text default 'updatedAt_desc'
 )
 returns setof jobs as $$
 declare
@@ -217,7 +218,12 @@ begin
     and (array_length(jobs_link_ids, 1) is null or link_id = any(jobs_link_ids))
     and (array_length(jobs_labels, 1) is null or labels && jobs_labels)
     and (jobs_search is null or job_search_vector @@ plainto_tsquery('english', jobs_search))
-  order by "listedAt" desc nulls last, updated_at desc, id desc
+  order by 
+    case when jobs_sort_by = 'listedAt_desc' then "listedAt" end desc nulls last,
+    case when jobs_sort_by = 'listedAt_asc' then "listedAt" end asc nulls last,
+    case when jobs_sort_by = 'updatedAt_desc' then updated_at end desc,
+    case when jobs_sort_by = 'updatedAt_asc' then updated_at end asc,
+    id desc
   limit jobs_page_size;
 end; $$
 language plpgsql;

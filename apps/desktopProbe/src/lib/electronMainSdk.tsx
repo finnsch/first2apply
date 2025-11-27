@@ -3,6 +3,7 @@ import {
   Job,
   JobLabel,
   JobSite,
+  JobSortOption,
   JobStatus,
   Link,
   Note,
@@ -139,6 +140,7 @@ export async function listJobs({
   siteIds,
   linkIds,
   labels,
+  sortBy,
   limit,
   after,
 }: {
@@ -147,6 +149,7 @@ export async function listJobs({
   siteIds?: number[];
   linkIds?: number[];
   labels?: string[];
+  sortBy?: JobSortOption;
   limit?: number;
   after?: string;
 }) {
@@ -163,6 +166,7 @@ export async function listJobs({
     siteIds,
     linkIds,
     labels,
+    sortBy,
     limit,
     after,
   });

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useError } from '@/hooks/error';
 import { changeAllJobsStatus, exportJobsToCsv } from '@/lib/electronMainSdk';
-import { Job, JobStatus } from '@first2apply/core';
+import { DEFAULT_JOB_SORT, Job, JobSortOption, JobStatus } from '@first2apply/core';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +58,7 @@ export function JobTabs() {
   const siteIds = searchParams.get('site_ids') ? searchParams.get('site_ids').split(',').map(Number) : [];
   const linkIds = searchParams.get('link_ids') ? searchParams.get('link_ids').split(',').map(Number) : [];
   const labels = searchParams.get('labels') ? searchParams.get('labels').split(',') : [];
+  const sortBy = (searchParams.get('sort_by') || DEFAULT_JOB_SORT) as JobSortOption;
 
   const [listing, setListing] = useState<JobListing>({
     isLoading: true,
@@ -72,7 +73,7 @@ export function JobTabs() {
   // Handle tab change
   const onTabChange = (tabValue: string) => {
     navigate(
-      `?status=${tabValue}&search=${search}&site_ids=${siteIds?.join(',')}&link_ids=${linkIds?.join(',')}&labels=${labels?.join(',')}&r=${Math.random()}`,
+      `?status=${tabValue}&search=${search}&site_ids=${siteIds?.join(',')}&link_ids=${linkIds?.join(',')}&labels=${labels?.join(',')}&sort_by=${sortBy}&r=${Math.random()}`,
     );
   };
 
@@ -227,6 +228,7 @@ export function JobTabs() {
         siteIds={siteIds}
         linkIds={linkIds}
         labels={labels}
+        sortBy={sortBy}
       />
     </Tabs>
   );
