@@ -1,0 +1,1 @@
+alter type public."Job Status" add value 'deleted' after 'applied';
