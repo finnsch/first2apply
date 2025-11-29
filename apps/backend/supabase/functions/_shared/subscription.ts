@@ -32,12 +32,11 @@ export async function checkUserSubscription({
 
   // check if the user's subscription has expired
   const subscriptionHasExpired = new Date(profile.subscription_end_date) < new Date();
-  const hasProTier = profile.subscription_tier === 'pro';
 
   return {
     profile,
     subscriptionHasExpired,
-    hasAdvancedMatching: hasProTier && !subscriptionHasExpired,
-    hasCustomJobsParsing: hasProTier && !subscriptionHasExpired,
+    hasAdvancedMatching: !subscriptionHasExpired,
+    hasCustomJobsParsing: !subscriptionHasExpired,
   };
 }
