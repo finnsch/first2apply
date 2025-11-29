@@ -6,6 +6,7 @@ export type First2ApplyBackendEnv = {
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
   azureFoundryConfig: AzureFoundryConfig;
+  openAiApiKey: string;
   mailerLiteApiKey?: string;
   mailerSendApiKey?: string;
   mezmoApiKey: string;
@@ -22,6 +23,7 @@ export function parseEnv(): First2ApplyBackendEnv {
       apiEndpoint: Deno.env.get('AZURE_AI_FOUNDRY_ENDPOINT') ?? '',
       apiKey: Deno.env.get('AZURE_AI_FOUNDRY_API_KEY') ?? '',
     },
+    openAiApiKey: Deno.env.get('OPENAI_API_KEY') ?? '',
     mailerLiteApiKey: Deno.env.get('MAILERLITE_API_KEY'),
     mailerSendApiKey: Deno.env.get('MAILERSEND_API_KEY'),
     mezmoApiKey: Deno.env.get('MEZMO_API_KEY') ?? '',

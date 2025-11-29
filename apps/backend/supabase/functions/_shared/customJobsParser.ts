@@ -35,7 +35,7 @@ export async function parseCustomJobs({
   const { logger } = context;
 
   const { openAi, llmConfig } = buildOpenAiClient({
-    modelName: 'o3-mini',
+    modelName: 'gpt-5-mini',
     ...context,
   });
 
@@ -253,7 +253,7 @@ ${withAdvancedMatchingPreferences}
 
   const { userPrompt, htmlContent } = generateUserPrompt();
   const { openAi, llmConfig } = buildOpenAiClient({
-    modelName: 'gpt-4o-mini',
+    modelName: 'gpt-5-mini',
     ...context,
   });
 

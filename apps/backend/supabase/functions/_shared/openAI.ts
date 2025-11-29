@@ -2,7 +2,7 @@ import { parseEnv } from './env.ts';
 
 import { getExceptionMessage } from '@first2apply/core';
 import { SupabaseClient } from '@supabase/supabasefork';
-import { AzureOpenAI } from 'openai';
+import OpenAI, { AzureOpenAI } from 'openai';
 
 import { ILogger } from './logger.ts';
 
@@ -46,7 +46,7 @@ export type AzureFoundryConfig = {
 /**
  * Build a new Azure OpenAI client.
  */
-export function buildOpenAiClient({ modelName }: { modelName?: SupportedModel }) {
+export function buildAzureOpenAiClient({ modelName }: { modelName?: SupportedModel }) {
   const openAi = new AzureOpenAI({
     apiKey: env.azureFoundryConfig.apiKey,
     endpoint: env.azureFoundryConfig.apiEndpoint,
@@ -58,6 +58,29 @@ export function buildOpenAiClient({ modelName }: { modelName?: SupportedModel })
     throw new Error(`Unsupported model: ${model}`);
   }
   console.log(`Using model ${model} for Azure OpenAI calls.`);
+  const { input, output } = COST_PER_MODEL[model];
+  const llmConfig = {
+    model,
+    costPerMillionInputTokens: input,
+    costPerMillionOutputTokens: output,
+  };
+
+  return { openAi, llmConfig };
+}
+
+/**
+ * Build a new OpenAI client (not Azure).
+ */
+export function buildOpenAiClient({ modelName }: { modelName?: SupportedModel }) {
+  const openAi = new OpenAI({
+    apiKey: env.openAiApiKey,
+  });
+
+  const model = modelName ?? 'gpt-4o';
+  if (!(model in COST_PER_MODEL)) {
+    throw new Error(`Unsupported model: ${model}`);
+  }
+  console.log(`Using model ${model} for OpenAI calls.`);
   const { input, output } = COST_PER_MODEL[model];
   const llmConfig = {
     model,
